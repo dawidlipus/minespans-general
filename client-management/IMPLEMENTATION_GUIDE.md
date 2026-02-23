@@ -4,10 +4,383 @@ Complete phase-by-phase implementation of the Client Management System.
 
 ## Table of Contents
 
+0. [Pre-Phase: Data Migration](#pre-phase-data-migration-week-0)
 1. [Phase 1: SharePoint Foundation](#phase-1-sharepoint-foundation-week-1)
 2. [Phase 2: Power Apps UI](#phase-2-power-apps-ui-week-2)
 3. [Phase 3: Power Automate Workflows](#phase-3-power-automate-workflows-week-3)
 4. [Phase 4: Advanced Integration](#phase-4-advanced-integration-week-4)
+
+---
+
+## Pre-Phase: Data Migration (Week 0)
+
+Before setting up the new CRM system, you need to prepare and migrate existing client data.
+
+### Step 0.1: Audit Current Data Sources
+
+Identify where your client data currently lives:
+
+```
+Current Systems:
+□ Salesforce (existing CRM)
+□ Excel/CSV files (spreadsheets)
+□ Azure AD (user accounts)
+□ Email/Outlook contacts
+□ Custom databases
+□ Paper records
+□ Other systems: _________________
+
+Data to migrate:
+□ Account/Company information
+□ Contact details
+□ Historical communications
+□ Access levels/permissions
+□ Contract dates
+□ Custom fields
+```
+
+### Step 0.2: Assess Data Quality
+
+Before migration, evaluate your data:
+
+```
+Data Quality Checklist:
+□ Duplicate records: Are there duplicates? Run deduplication first.
+□ Missing fields: What % of records have blank required fields?
+□ Outdated contacts: When was data last updated?
+□ Inconsistent formats: Email addresses, phone numbers, company names
+□ Orphaned records: Contacts without accounts
+□ Invalid data: Incorrect email formats, bad characters
+
+Issues found:
+- Issue 1: _______________  Severity: High/Medium/Low  Action: _______________
+- Issue 2: _______________  Severity: High/Medium/Low  Action: _______________
+- Issue 3: _______________  Severity: High/Medium/Low  Action: _______________
+```
+
+**Recommendation:** Clean data before migration (saves time later).
+
+### Step 0.3: Choose Migration Strategy
+
+#### **Option A: From Salesforce (Recommended if you have Salesforce)**
+
+**Tools needed:**
+- Salesforce Data Export
+- Power Query (Excel)
+- CSV upload to SharePoint
+
+**Process:**
+```
+1. In Salesforce:
+   ├─ Reports → Export Accounts → accounts.csv
+   ├─ Reports → Export Contacts → contacts.csv
+   └─ Save files locally
+
+2. In Excel (Data Cleaning):
+   ├─ Open accounts.csv
+   ├─ Rename columns to match SharePoint:
+   │  ├─ Account Name → Title
+   │  ├─ Industry → Client_Segment (map manually)
+   │  ├─ Annual Revenue → Tier (map manually)
+   │  └─ Status → Status
+   ├─ Remove unnecessary columns
+   ├─ Check for duplicates
+   └─ Save as cleaned-accounts.csv
+
+3. Repeat for contacts.csv:
+   ├─ Contact Name → Title
+   ├─ Email → Email
+   ├─ Account Name → Account (will link later)
+   ├─ Title → Role (map Admin/User/Viewer)
+   └─ Save as cleaned-contacts.csv
+
+4. In SharePoint Lists:
+   ├─ Go to Accounts list
+   ├─ Click "Import" → Upload cleaned-accounts.csv
+   ├─ Map columns
+   ├─ Complete import
+   └─ Verify: 10-100 accounts imported
+```
+
+**Mapping Example (Salesforce → SharePoint):**
+```
+Salesforce Field          → SharePoint Field
+─────────────────────────────────────────
+Account Name              → Title
+Industry                  → Client_Segment
+Annual Revenue            → Tier (map: <$1M=Startup, $1-10M=MidMarket, >$10M=Enterprise)
+StageName (Opportunity)   → Status (map: Active/Inactive)
+Contract Expiration Date  → Access_Expiry
+Account Description       → Notes
+```
+
+#### **Option B: From Excel/CSV Files**
+
+**Process:**
+```
+1. Gather all CSV files with client data
+   ├─ accounts.csv
+   ├─ contacts.csv
+   └─ other_data.csv
+
+2. In Excel, standardize format:
+   ├─ Column headers must match SharePoint exactly
+   ├─ Remove extra/unused columns
+   ├─ Ensure all data types match (text, date, number)
+   └─ Fix any special characters
+
+3. Clean data:
+   ├─ Remove duplicates (Data → Remove Duplicates)
+   ├─ Trim whitespace (Find & Replace → Trim)
+   ├─ Standardize date format (all as YYYY-MM-DD)
+   └─ Verify no blank required fields
+
+4. Upload to SharePoint:
+   ├─ Go to List → Import
+   ├─ Upload CSV file
+   ├─ Map columns
+   └─ Verify import
+```
+
+**Column mapping for CSV:**
+```
+CSV Column              → SharePoint Field
+──────────────────────────────────────────
+Company Name           → Title
+Segment               → Client_Segment
+Customer Type         → Tier
+Is Active?            → Status
+Contract Expires      → Access_Expiry
+Notes                 → Notes
+Contact Name          → Title (in Contacts)
+Contact Email         → Email
+Company (for Contact) → Account (Lookup)
+```
+
+#### **Option C: From Azure AD**
+
+**Purpose:** Sync existing user accounts from Azure AD
+
+**Process:**
+```
+1. In Azure AD:
+   ├─ Groups → Export all groups containing "ClientGroup"
+   └─ For each group:
+      ├─ Export members list
+      └─ Get: UserID, Email, DisplayName
+
+2. Create contacts.csv from Azure AD data:
+   ├─ Azure User ID → Azure_User_ID
+   ├─ UserPrincipalName → Email
+   ├─ DisplayName → Title
+   ├─ Has Azure account → Set to "Yes" for all
+   └─ Map to Account (manual or lookup)
+
+3. Upload to SharePoint:
+   ├─ Go to Contacts list
+   ├─ Import contacts.csv
+   ├─ Verify Azure_User_ID is populated
+   └─ Set Has_Azure_Account = YES for all
+```
+
+#### **Option D: Hybrid (Multiple Sources)**
+
+If data comes from multiple systems:
+
+```
+1. Export from each system:
+   ├─ System A → accounts_a.csv
+   ├─ System B → contacts_b.csv
+   └─ System C → users_c.csv
+
+2. Consolidate in Excel:
+   ├─ Create master_accounts.csv
+   │  ├─ Combine all accounts
+   │  ├─ Deduplicate
+   │  └─ Map to standard columns
+   │
+   ├─ Create master_contacts.csv
+   │  ├─ Combine all contacts
+   │  ├─ Deduplicate
+   │  ├─ Add source field (which system)
+   │  └─ Map to standard columns
+   │
+   └─ Reconcile discrepancies:
+      ├─ Same account in System A and B?
+      ├─ Different contact info?
+      └─ Manual review and merge
+
+3. Upload consolidated files to SharePoint
+```
+
+### Step 0.4: Data Validation & Cleanup
+
+Before importing, validate your CSV files:
+
+```
+Validation Checklist:
+☐ Column names match SharePoint exactly
+☐ No duplicate records (remove with Find & Replace)
+☐ Date fields are in YYYY-MM-DD format
+☐ Email addresses are valid (basic check: contains @)
+☐ Phone numbers are consistent format
+☐ Required fields are populated (no blanks in critical fields)
+☐ No special characters that break imports
+☐ File is saved as UTF-8 (not Excel format)
+☐ Row count is correct
+☐ Sample spot-check: 5 random rows verified
+
+Common issues to fix:
+├─ Extra spaces at start/end of fields
+│  └─ Solution: Find & Replace "  " → "" (remove spaces)
+├─ Inconsistent company names (Acme Corp vs ACME CORP vs acme)
+│  └─ Solution: Manual review or PROPER() function
+├─ Multiple email addresses in one field
+│  └─ Solution: Create separate contact records
+├─ Dates in multiple formats (3/1/2026 vs 2026-03-01)
+│  └─ Solution: Convert all to YYYY-MM-DD
+└─ Text in number fields
+   └─ Solution: Clean to numbers only
+```
+
+### Step 0.5: Create Migration Plan Document
+
+Write down your specific migration plan:
+
+```
+MIGRATION PLAN
+
+Data Sources:
+□ Primary source: _________________ (Salesforce / Excel / Azure AD / Other)
+□ Secondary source: _________________ (if applicable)
+□ Tertiary source: _________________ (if applicable)
+
+Timeline:
+□ Data audit: __________ (date)
+□ Data cleanup: __________ (date)
+□ CSV preparation: __________ (date)
+□ Test import: __________ (date)
+□ Full production import: __________ (date)
+
+Owner/Responsibility:
+□ Data extraction: _______________
+□ Data cleaning: _______________
+□ Validation: _______________
+□ Upload to SharePoint: _______________
+
+Expected Results:
+□ Accounts to migrate: __________ (number)
+□ Contacts to migrate: __________ (number)
+□ Campaigns to migrate: __________ (yes/no)
+□ Interaction history: __________ (yes/no)
+
+Rollback Plan:
+□ If import fails: __________________________________
+□ If data corruption: __________________________________
+□ If < 90% successful: __________________________________
+```
+
+### Step 0.6: Perform Test Migration
+
+**Do this BEFORE production:**
+
+```
+1. Create test SharePoint site:
+   └─ /sites/client-management-test
+
+2. Import sample data (10-20 records):
+   ├─ accounts_sample.csv → Test Accounts list
+   └─ contacts_sample.csv → Test Contacts list
+
+3. Verify in SharePoint:
+   ☐ All records imported
+   ☐ All columns populated correctly
+   ☐ Lookup fields working (Account link in Contacts)
+   ☐ Dates formatted correctly
+   ☐ No data corruption
+   ☐ Can view and edit records
+
+4. If issues found:
+   ├─ Delete test data
+   ├─ Fix CSV file
+   ├─ Retry import
+   └─ Repeat until successful
+
+5. Document any issues:
+   └─ Record what went wrong and how you fixed it
+      (This helps with production import)
+```
+
+### Step 0.7: Production Data Import
+
+Once test is successful:
+
+```
+1. Prepare production lists in SharePoint:
+   ├─ Create all 4 lists (Accounts, Contacts, Campaigns, Interactions)
+   ├─ Configure columns
+   └─ Enable quick edit and attachments
+
+2. Import Accounts:
+   ├─ Go to Accounts list → Import
+   ├─ Upload cleaned-accounts.csv
+   ├─ Map columns carefully
+   ├─ Preview before completing
+   └─ Click "Import"
+   └─ Verify: Count matches expected
+
+3. Import Contacts:
+   ├─ Go to Contacts list → Import
+   ├─ Upload cleaned-contacts.csv
+   ├─ Important: Map Account column as Lookup
+   ├─ For each contact, system will find matching account
+   ├─ Preview results
+   └─ Click "Import"
+   └─ Verify: All lookups resolved correctly
+
+4. Verify all data:
+   ├─ Total accounts: __________ ✓
+   ├─ Total contacts: __________ ✓
+   ├─ Account lookups working: Yes / No
+   ├─ Contact lookups working: Yes / No
+   ├─ No blank required fields: Yes / No
+   └─ Data looks correct: Yes / No
+```
+
+### Step 0.8: Post-Migration Cleanup
+
+After import:
+
+```
+1. Remove test records:
+   ├─ Delete test SharePoint site (/sites/client-management-test)
+   └─ Archive test CSV files
+
+2. Archive source data:
+   ├─ Back up original CSV files
+   ├─ Store in: _________________ (OneDrive/SharePoint/GitHub)
+   └─ Label with date and version
+
+3. Document changes:
+   ├─ Record final data counts
+   ├─ Note any data quality issues found
+   ├─ Document any field mappings that diverged from plan
+   └─ Update README with migration notes
+
+4. Notify stakeholders:
+   ├─ Message Ryne Tudela (Salesforce owner)
+   └─ Message Udit Gupta (Client dev manager)
+      Subject: "Client data migrated to new CRM"
+      Content: Summary of what was imported, any issues, next steps
+```
+
+### Deliverables for Pre-Phase
+- ✅ Data audit completed
+- ✅ Migration strategy chosen
+- ✅ CSV files cleaned and validated
+- ✅ Test migration successful
+- ✅ Production data imported
+- ✅ Migration documented
 
 ---
 
