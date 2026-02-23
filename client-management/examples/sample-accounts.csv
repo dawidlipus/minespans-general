@@ -1,0 +1,11 @@
+Title,Client_Segment,Tier,Status,Access_Expiry,Notes
+Acme Corp,Enterprise-T1,Enterprise,Active,2026-12-31,Primary enterprise customer
+Global Industries,Enterprise-T1,Enterprise,Active,2027-06-30,Large multinational
+Tech Ventures Inc,Enterprise-T2,Enterprise,Active,2026-09-15,Growing technology sector
+Innovation Labs,Enterprise-T2,Enterprise,Active,2026-08-31,Research & development
+Mid Scale Solutions,MidMarket-T1,MidMarket,Active,2026-05-30,Established mid-market
+Growth Partners LLC,MidMarket-T1,MidMarket,Active,2026-07-31,Scaling mid-market company
+Future Startups Co,Startup,Startup,Trial,2026-04-30,Early-stage startup
+NextGen Systems,Startup,Startup,Trial,2026-03-31,Pre-revenue startup
+Horizon Technologies,MidMarket-T2,MidMarket,Inactive,2025-12-31,Recently churned
+Beta Test Labs,Startup,Startup,Active,2026-10-31,Long-term trial customer

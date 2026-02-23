@@ -1,0 +1,21 @@
+Title,Email,Account,Role,Has_Azure_Account,Contact_Type,Active
+John Smith,john.smith@acmecorp.com,Acme Corp,Admin,Yes,Employee,Yes
+Jane Doe,jane.doe@acmecorp.com,Acme Corp,User,Yes,Employee,Yes
+Robert Johnson,robert.johnson@acmecorp.com,Acme Corp,User,No,Contractor,Yes
+Sarah Williams,sarah.williams@global-ind.com,Global Industries,Admin,Yes,Employee,Yes
+Michael Brown,michael.brown@global-ind.com,Global Industries,User,Yes,Employee,Yes
+Emily Davis,emily.davis@global-ind.com,Global Industries,Viewer,No,Partner,Yes
+David Wilson,david.wilson@techventures.com,Tech Ventures Inc,Admin,Yes,Employee,Yes
+Lisa Anderson,lisa.anderson@techventures.com,Tech Ventures Inc,User,Yes,Employee,Yes
+James Taylor,james.taylor@techventures.com,Tech Ventures Inc,User,No,Contractor,No
+Patricia Martinez,patricia.martinez@innovation.com,Innovation Labs,Admin,Yes,Employee,Yes
+Christopher Garcia,christopher.garcia@innovation.com,Innovation Labs,User,Yes,Employee,Yes
+Jennifer Rodriguez,jennifer.rodriguez@innovation.com,Innovation Labs,Viewer,No,Partner,Yes
+Richard Lee,richard.lee@midscale.com,Mid Scale Solutions,Admin,Yes,Employee,Yes
+Karen White,karen.white@midscale.com,Mid Scale Solutions,User,Yes,Employee,Yes
+Daniel Harris,daniel.harris@midscale.com,Mid Scale Solutions,User,No,Contractor,Yes
+Nancy Clark,nancy.clark@growthpartners.com,Growth Partners LLC,Admin,Yes,Employee,Yes
+Mark Lewis,mark.lewis@growthpartners.com,Growth Partners LLC,User,Yes,Employee,Yes
+Sandra Scott,sandra.scott@futurestartups.com,Future Startups Co,Admin,No,Employee,Yes
+Andrew Green,andrew.green@futurestartups.com,Future Startups Co,User,No,Employee,Yes
+Jessica Adams,jessica.adams@nextgen.com,NextGen Systems,Admin,No,Employee,Yes
