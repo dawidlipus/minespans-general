@@ -1,0 +1,228 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Steel Financials Collection Response",
+  "description": "Final validated output from the 3-stage collection pipeline for one company-quarter pair",
+  "type": "object",
+  "required": ["company", "period", "reporting_currency", "unit_scale", "source", "consolidated", "validation_status"],
+  "properties": {
+    "company": {
+      "type": "string",
+      "description": "Company name as used in the database",
+      "enum": [
+        "Nucor", "Steel Dynamics", "US Steel", "Gerdau", "Stelco", "Algoma", "CMC",
+        "Salzgitter", "ArcelorMittal", "ThyssenKrupp Steel", "voestalpine", "SSAB",
+        "APERAM", "Acerinox", "Outokumpu",
+        "Tata Steel", "JSW Steel", "SAIL", "Bluescope", "Metinvest", "RINL"
+      ]
+    },
+    "period": {
+      "type": "string",
+      "pattern": "^Q[1-4] \\d{4}$",
+      "description": "Calendar quarter, e.g. 'Q4 2024'"
+    },
+    "fiscal_period": {
+      "type": ["string", "null"],
+      "description": "Fiscal quarter if different from calendar, e.g. 'Q3 FY25' for Indian companies"
+    },
+    "reporting_currency": {
+      "type": "string",
+      "enum": ["USD", "EUR", "SEK", "INR", "CAD", "AUD", "BRL", "GBP"],
+      "description": "Currency as reported by the company — do NOT convert"
+    },
+    "unit_scale": {
+      "type": "string",
+      "enum": ["units", "thousands", "millions", "billions", "crores", "lakhs"],
+      "description": "Scale of all currency values in this response"
+    },
+    "source": {
+      "type": "object",
+      "required": ["url", "type", "published"],
+      "properties": {
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Direct URL to the filing or earnings release"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["earnings press release", "10-Q", "10-K", "6-K", "8-K", "quarterly report", "half-year report", "annual report", "investor presentation"],
+          "description": "Type of source document"
+        },
+        "published": {
+          "type": "string",
+          "format": "date",
+          "description": "Publication date of the filing (YYYY-MM-DD)"
+        },
+        "document_title": {
+          "type": ["string", "null"],
+          "description": "Title of the document as stated in the filing"
+        }
+      }
+    },
+    "consolidated": {
+      "$ref": "#/definitions/metric_set",
+      "description": "Consolidated (group-level) financials"
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Segment name as reported by the company"
+          },
+          "revenue": { "$ref": "#/definitions/metric_value" },
+          "ebitda": { "$ref": "#/definitions/metric_value" },
+          "ebit": { "$ref": "#/definitions/metric_value" },
+          "shipments": { "$ref": "#/definitions/volume_value" },
+          "avg_selling_price": { "$ref": "#/definitions/price_value" }
+        }
+      },
+      "description": "Segment-level breakdown. Empty array if no segment data available"
+    },
+    "footnotes": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Material footnotes: LIFO adjustments, impairments, one-time items, restatements"
+    },
+    "validation_status": {
+      "type": "string",
+      "enum": ["PASS", "PASS_WITH_WARNINGS", "FAIL"],
+      "description": "Result of Stage 3 validation checks"
+    },
+    "validation_warnings": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of warnings from validation (empty if PASS)"
+    },
+    "corrections_applied": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["field", "action", "new_value", "method"],
+        "properties": {
+          "field": { "type": "string" },
+          "action": {
+            "type": "string",
+            "enum": ["derived", "unit_corrected", "recalculated"]
+          },
+          "old_value": {},
+          "new_value": {},
+          "method": { "type": "string", "description": "How the correction was made" }
+        }
+      },
+      "description": "Corrections applied during Stage 3 validation"
+    }
+  },
+  "definitions": {
+    "metric_value": {
+      "type": ["object", "null"],
+      "properties": {
+        "value": {
+          "type": ["number", "null"],
+          "description": "Numeric value in the unit_scale of the parent response"
+        },
+        "raw_text": {
+          "type": ["string", "null"],
+          "description": "Exact quote from the source document"
+        },
+        "adjusted": {
+          "type": "boolean",
+          "default": false,
+          "description": "True if this is an adjusted (non-GAAP) figure"
+        },
+        "note": {
+          "type": ["string", "null"],
+          "description": "Explanation if null or unusual"
+        },
+        "calculated": {
+          "type": "boolean",
+          "default": false,
+          "description": "True if derived from other values rather than directly reported"
+        }
+      }
+    },
+    "volume_value": {
+      "type": ["object", "null"],
+      "properties": {
+        "value": {
+          "type": ["number", "null"]
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["net tons (thousands)", "metric tonnes (thousands)", "million tonnes", "ktonnes"],
+          "description": "Volume unit — always specify net tons vs metric tonnes"
+        },
+        "raw_text": {
+          "type": ["string", "null"]
+        },
+        "note": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+    "price_value": {
+      "type": ["object", "null"],
+      "properties": {
+        "value": {
+          "type": ["number", "null"]
+        },
+        "unit": {
+          "type": "string",
+          "description": "e.g. 'USD/net ton', 'EUR/tonne', 'INR/tonne'"
+        },
+        "raw_text": {
+          "type": ["string", "null"]
+        },
+        "calculated": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "ratio_value": {
+      "type": ["object", "null"],
+      "properties": {
+        "value": {
+          "type": ["number", "null"],
+          "description": "Stored as decimal, e.g. 0.147 = 14.7%"
+        },
+        "raw_text": {
+          "type": ["string", "null"]
+        },
+        "calculated": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "metric_set": {
+      "type": "object",
+      "description": "Full set of financial metrics for a company or segment",
+      "properties": {
+        "revenue":            { "$ref": "#/definitions/metric_value" },
+        "cogs":               { "$ref": "#/definitions/metric_value" },
+        "gross_margin":       { "$ref": "#/definitions/metric_value" },
+        "ebitda":             { "$ref": "#/definitions/metric_value" },
+        "ebitda_margin":      { "$ref": "#/definitions/ratio_value" },
+        "ebit":               { "$ref": "#/definitions/metric_value" },
+        "net_earnings":       { "$ref": "#/definitions/metric_value" },
+        "depreciation":       { "$ref": "#/definitions/metric_value" },
+        "shipments":          { "$ref": "#/definitions/volume_value" },
+        "avg_selling_price":  { "$ref": "#/definitions/price_value" },
+        "capex":              { "$ref": "#/definitions/metric_value" },
+        "raw_steel_production": { "$ref": "#/definitions/volume_value" },
+        "capacity_utilization": { "$ref": "#/definitions/ratio_value" },
+        "interest_expense":   { "$ref": "#/definitions/metric_value" },
+        "income_tax":         { "$ref": "#/definitions/metric_value" },
+        "employee_costs":     { "$ref": "#/definitions/metric_value" },
+        "inventory_change":   { "$ref": "#/definitions/metric_value" },
+        "ocf":                { "$ref": "#/definitions/metric_value" },
+        "fcf":                { "$ref": "#/definitions/metric_value" },
+        "headcount":          { "$ref": "#/definitions/metric_value" }
+      }
+    }
+  }
+}
